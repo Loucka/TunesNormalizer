@@ -17,7 +17,7 @@ namespace TunesNormalizer
 
         #region Data Members
 
-        private int _iTotalSongs, _iNormalizedSongs;
+        private int _iTotalSongs, _iNormalizedSongs, _iDuplicates;
         private Thread _threadNormalizer;
 
         #endregion
@@ -62,7 +62,7 @@ namespace TunesNormalizer
             else
             {
                 this.labelProgress.Visible = true;
-                this.labelProgress.Text = String.Format("{0} / {1} Songs Normalized", _iNormalizedSongs, _iTotalSongs);
+                this.labelProgress.Text = String.Format("{0} / {1} Songs Normalized ({2} Duplicates Found)", _iNormalizedSongs, _iTotalSongs, _iDuplicates);
             }
         }
 
@@ -86,7 +86,8 @@ namespace TunesNormalizer
             // Next, retrieve the number of MP3 files to normalize.
             string[] mp3Files = Directory.GetFiles(sDirectory, "*.mp3");
             _iTotalSongs = mp3Files.Length;
-            _iNormalizedSongs = 0;
+            _iNormalizedSongs =
+                _iDuplicates = 0;
 
             // Finally, iterate through the list and apply normalization.
             foreach (var sOriginalFile in mp3Files)
@@ -107,6 +108,8 @@ namespace TunesNormalizer
 
                 if (!File.Exists (sTitle))
                     File.Copy(sOriginalFile, sTitle);
+                else
+                    _iDuplicates++;
                 _iNormalizedSongs++;
             }
         }
@@ -118,9 +121,10 @@ namespace TunesNormalizer
                 if (!Directory.Exists(sDirectory))
                     Directory.CreateDirectory(sDirectory);
             }
-            catch (Exception)
+            catch (Exception exc)
             {
-               return false;
+                Console.WriteLine(exc.Message);
+                return false;
             }
 
             return true;
